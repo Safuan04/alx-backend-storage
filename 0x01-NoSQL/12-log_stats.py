@@ -18,10 +18,10 @@ if __name__ == "__main__":
     
     print(f'{doc_num} logs\n'
         'Methods:\n'
-        f'    method GET: {get_meth}\n'
-        f'    method POST: {post_meth}\n'
-        f'    method PUT: {put_meth}\n'
-        f'    method PATCH: {patch_meth}\n'
-        f'    method DELETE: {delete_meth}\n'
+        f'\tmethod GET: {get_meth}\n'
+        f'\tmethod POST: {post_meth}\n'
+        f'\tmethod PUT: {put_meth}\n'
+        f'\tmethod PATCH: {patch_meth}\n'
+        f'\tmethod DELETE: {delete_meth}\n'
         f'{status_get_path} status check')
 
