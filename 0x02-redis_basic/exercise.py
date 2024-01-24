@@ -17,7 +17,7 @@ class Cache():
         self._redis.set(random_key, data)
         return random_key
 
-    def get(self, key: str, fn: Optional[Callable]):
+    def get(self, key: str, fn: Optional[Callable] = None):
         """This method takes a key string argument
             and an optional Callable argument named fn"""
         value = self._redis.get(key)
