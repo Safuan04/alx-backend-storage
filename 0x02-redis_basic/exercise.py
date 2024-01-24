@@ -30,8 +30,8 @@ class Cache():
         else:
             return value
 
-    def get_str(self, key):
+    def get_str(self, key: str):
         return self.get(key, fn=lambda d: d.decode("utf-8"))
 
-    def get_int(self, key):
+    def get_int(self, key: str):
         return self.get(key, fn=int)
