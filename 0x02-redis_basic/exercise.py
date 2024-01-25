@@ -34,7 +34,8 @@ def call_history(method: Callable) -> Callable:
 
 
 def replay(method: Callable) -> Callable:
-    """"""
+    """This function display the history of
+        calls of a particular function."""
     r = redis.Redis()
     key = method.__qualname__
     outputs_key = key + ":outputs"
