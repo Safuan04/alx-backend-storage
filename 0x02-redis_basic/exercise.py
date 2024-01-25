@@ -1,35 +1,38 @@
 #!/usr/bin/env python3
-"""Defining a Class Cache"""
+"""Creatin a Cashe class"""
 import redis
-import uuid
 from typing import Union, Callable, Optional
+import uuid
 from functools import wraps
 
 
 def count_calls(method: Callable) -> Callable:
-    """Increments a counter in Redis each time
-    the method is called"""
+    """Decorator to count the number of calls to a method."""
     @wraps(method)
-    def wrapper(self, *args, **kwds):
+    def function_wrapper(self, *args, **kwargs):
+        """Wrapper function to increment the call
+            count before calling the method."""
         key = method.__qualname__
         self._redis.incr(key)
-        return method(self, *args, **kwds)
-    return wrapper
+        return method(self, *args, **kwargs)
+    return function_wrapper
 
 
 def call_history(method: Callable) -> Callable:
-    """Records the input parameters and output of
-    the method in Redis in a List"""
+    """Decorator to record the history of calls to a method."""
     @wraps(method)
-    def wrapper(self, *args, **kwds):
+    def function_wrapper(self, *args):
+        """Wrapper function to record inputs
+            and outputs before calling the method."""
         key = method.__qualname__
-        inputs_list_key = key + ":inputs"
-        output_list_key = key + ":outputs"
-        self._redis.rpush(inputs_list_key, str(args))
-        key_arg = method(self, *args, **kwds)
-        self._redis.rpush(output_list_key, key_arg)
-        return key_arg
-    return wrapper
+        outputs_key = key + ":outputs"
+        inputs_key = key + ":inputs"
+        self._redis.rpush(inputs_key, str(args))
+
+        result = method(self, *args)
+        self._redis.rpush(outputs_key, result)
+        return result
+    return function_wrapper
 
 
 def replay(method: Callable):
@@ -45,50 +48,37 @@ def replay(method: Callable):
         print(f"{key}(*{in_args.decode('utf-8')}) -> {op_key.decode('utf-8')}")
 
 
-class Cache:
-    """Class Cache"""
+class Cache():
     def __init__(self) -> None:
-        """Initializing a new Cache"""
+        """Storing an instance of the redis client"""
         self._redis = redis.Redis()
         self._redis.flushdb()
 
     @call_history
     @count_calls
     def store(self, data: Union[str, bytes, int, float]) -> str:
-        """takes a data argument, sets it to a random key and
-        returns the key"""
-        key = str(uuid.uuid4())
-        self._redis.set(key, data)
-        return key
+        """This method take a data argument and returns a string"""
+        random_key = str(uuid.uuid4())
+        self._redis.set(random_key, data)
+        return random_key
 
     def get(self, key: str, fn: Optional[Callable] = None):
-        """Reads from Redis and recovers original type"""
+        """This method takes a key string argument
+            and an optional Callable argument named fn"""
         value = self._redis.get(key)
+
         if not value:
             return None
+
         if fn:
             return fn(value)
         else:
             return value
 
-    def get_str(self, key: str) -> Optional[str]:
-        """parametrize get method with string fn"""
+    def get_str(self, key: str):
+        """Retrieve a string from the cache."""
         return self.get(key, fn=lambda d: d.decode("utf-8"))
 
-    def get_int(self, key: str) -> Optional[int]:
-        """parametrize get method with integer fn"""
+    def get_int(self, key: str):
+        """Retrieve an integer from the cache."""
         return self.get(key, fn=int)
-
-    def replay(self, method: Callable):
-        """displays the history of calls of a particular function"""
-        # Get the qualified name of the method
-        key = method.__qualname_
-        # Construct the Redis keys for inputs and outputs
-        inputs_list_key = key + ":inputs"
-        output_list_key = key + ":outputs"
-        inputs = self._redis.lrange(inputs_list_key, 0, -1)
-        outputs = self._redis.lrange(output_list_key, 0, -1)
-        print(f"{key} was called {len(inputs)} times:")
-        for input_args, output_key in zip(inputs, outputs):
-            # Print the input arguments and the corresponding output key
-            print(f"{key}(*{input_args.decode()}) -> {output_key.decode()}")
