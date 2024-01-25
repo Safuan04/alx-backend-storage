@@ -5,6 +5,7 @@ from typing import Union, Callable, Optional
 import uuid
 from functools import wraps
 
+
 def count_calls(method: Callable) -> Callable:
     """"""
     @wraps(method)
@@ -14,6 +15,7 @@ def count_calls(method: Callable) -> Callable:
         self._redis.incr(key)
         return method(self, *args, **kwargs)
     return function_wrapper
+
 
 def call_history(method: Callable) -> Callable:
     """"""
@@ -30,6 +32,7 @@ def call_history(method: Callable) -> Callable:
         return result
     return function_wrapper
 
+
 def replay(method: Callable) -> Callable:
     """"""
     r = redis.Redis()
@@ -42,6 +45,7 @@ def replay(method: Callable) -> Callable:
 
     for input, output in zip(inputs, outputs):
         print(f'{key}(*{input.decode("utf-8")}) -> {output.decode("utf-8")}')
+
 
 class Cache():
     def __init__(self) -> None:
@@ -75,10 +79,3 @@ class Cache():
 
     def get_int(self, key: str):
         return self.get(key, fn=int)
-
-
-cache = Cache()
-cache.store("foo")
-cache.store("bar")
-cache.store(42)
-replay(cache.store)
