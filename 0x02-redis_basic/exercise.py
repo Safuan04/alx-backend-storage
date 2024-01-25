@@ -7,10 +7,11 @@ from functools import wraps
 
 
 def count_calls(method: Callable) -> Callable:
-    """"""
+    """Decorator to count the number of calls to a method."""
     @wraps(method)
     def function_wrapper(self, *args, **kwargs):
-        """"""
+        """Wrapper function to increment the call
+            count before calling the method."""
         key = method.__qualname__
         self._redis.incr(key)
         return method(self, *args, **kwargs)
@@ -18,10 +19,11 @@ def count_calls(method: Callable) -> Callable:
 
 
 def call_history(method: Callable) -> Callable:
-    """"""
+    """Decorator to record the history of calls to a method."""
     @wraps(method)
     def function_wrapper(self, *args):
-        """"""
+        """Wrapper function to record inputs
+            and outputs before calling the method."""
         key = method.__qualname__
         outputs_key = key + ":outputs"
         inputs_key = key + ":inputs"
@@ -76,7 +78,9 @@ class Cache():
             return value
 
     def get_str(self, key: str):
+        """Retrieve a string from the cache."""
         return self.get(key, fn=lambda d: d.decode("utf-8"))
 
     def get_int(self, key: str):
+        """Retrieve an integer from the cache."""
         return self.get(key, fn=int)
