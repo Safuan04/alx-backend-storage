@@ -30,6 +30,19 @@ def call_history(method: Callable) -> Callable:
         return result
     return function_wrapper
 
+def replay(method: Callable) -> Callable:
+    """"""
+    r = redis.Redis()
+    key = method.__qualname__
+    outputs_key = key + ":outputs"
+    inputs_key = key + ":inputs"
+    inputs = r.lrange(inputs_key, 0, -1)
+    outputs = r.lrange(outputs_key, 0, -1)
+    print(f'{key} was called {len(inputs)} times:')
+
+    for input, output in zip(inputs, outputs):
+        print(f'{key}(*{input.decode("utf-8")}) -> {output.decode("utf-8")}')
+
 class Cache():
     def __init__(self) -> None:
         """Storing an instance of the redis client"""
@@ -62,3 +75,10 @@ class Cache():
 
     def get_int(self, key: str):
         return self.get(key, fn=int)
+
+
+cache = Cache()
+cache.store("foo")
+cache.store("bar")
+cache.store(42)
+replay(cache.store)
